@@ -11,7 +11,6 @@ struct Node
 	Node(int val):data(val),lchild(0),rchild(0), p(NULL) {};
 };
 
-// test
 class BST
 {
 public:
