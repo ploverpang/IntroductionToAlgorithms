@@ -2,109 +2,131 @@
 
 using namespace::std;
 
-struct Node 
+struct Node
 {
 	int data;
 	Node *lchild;
 	Node *rchild;
-	Node(int val):data(val),lchild(0),rchild(0){};
+	Node *p;
+	Node(int val):data(val),lchild(0),rchild(0), p(NULL) {};
 };
 
+// test
 class BST
 {
 public:
 	BST();
 	BST(const int *newData, const size_t dataNum);
-	Node* insertElem(Node* node, const int newData);
-	bool search(const int val) const;
+	void insertElem(const int newData);
+	void insertElem1(const int newData);
+	Node* search(const int val) const;
 	size_t getSize() const;
 	void midOrderPrint() const;
+	Node* successor(Node *x);
+	Node* predecessor(Node *x);
+	void deleteNode(Node *x);
+
 private:
-	Node *root;
-	size_t size;
+	Node *m_root;
+	size_t m_size;
 	void printNode(const Node *node) const;
 	void midOrderWithNode(const Node *node) const;
-	bool searchWithNode(const Node *node, const int val) const;
+	Node* searchWithNode(Node *node, const int val) const;
+    Node* minimum(Node *x);
+	Node* maximum(Node *x);
+	void insertElemReserve(const int newData, Node *x, Node *y);
+	void replace(Node *u, Node *v);
 };
 
 BST::BST()
 {
-	root = NULL;
-	size = 0;
+	m_root = NULL;
+	m_size = 0;
+}
+
+Node* BST::minimum(Node *x)
+{
+    Node *node = x;
+    while(node->lchild != NULL)
+        node = node->lchild;
+    return node;
+}
+
+Node* BST::maximum(Node *x)
+{
+    Node *node = x;
+    while(node->rchild != NULL)
+        node = node->rchild;
+    return node;
 }
 
 BST::BST(const int *newData, const size_t dataNum)
 {
-	
-	//root = new Node();    //早些的版本在构造函数中。预先定义了一个节点，然后在插入操作时，判断是否size为0
-	//root->lchild = NULL;  //这个操作完全可以把root设为NULL，在insert中统一操作
-	//root->rchild = NULL;
+	m_root = NULL;
+	m_size = 0;
 
-	root = NULL;
-	size = 0;
-
-	for(size_t i = 1; i != dataNum; ++i)
+	for(size_t i = 0; i < dataNum; ++i)
 	{
-		insertElem(root, newData[i]);
+		insertElem(newData[i]);
 	}
 }
 
 size_t BST::getSize() const
 {
-	return size;
+	return m_size;
 }
 
-Node* BST::insertElem(Node* node, const int newData)
+void BST::insertElem1(const int newData)
 {
-	/*
-	if(size == 0)
+	// iterative
+	Node *x = m_root;
+	Node *y = NULL; // x's parent
+
+	while(x != NULL)
 	{
-		node->data = newData;
-		++size;
-		return;
-	}
-	*/
-	if(node == NULL)
-	{
-		node = new Node(newData);
-		++size;
-	}
-	else if(newData < node->data)	
-	{
-		 node = insertElem(node->lchild, newData);
-	}
-	else
-	{	
-		node = insertElem(node->rchild, newData);
-	}
-	return node;
-	/*
-	if(size == 0)
-	{	
-		tmp_root->data = newData;
-		++size;
-		return;
-	}
-	
-	if((tmp_root->lchild == NULL) && (tmp_root->rchild == NULL)) //if BST is no element
-	{
-		tmp_root->data = newData;
-		return;
-	}
-	
-	Node *tmp_root = root;
-	while(tmp_root != NULL)
-	{
-		if(newData < tmp_root->data)	
-			tmp_root = tmp_root->lchild;
+		y = x;
+		if(newData < x->data)
+			x = x->lchild;
 		else
-			tmp_root = tmp_root->rchild;
+			x = x->rchild;
 	}
-	tmp_root = new Node();
-	tmp_root->lchild = NULL;
-	tmp_root->rchild = NULL;
-	tmp_root->data = newData;
-	*/
+
+	x = new Node(newData);
+	if(y == NULL)
+		m_root = x;
+	else if(newData < y->data)
+		y->lchild = x;
+	else
+		y->rchild = x;
+	x->p = y;
+	m_size++;
+}
+
+void BST::insertElem(const int newData)
+{
+	// reserve
+	insertElemReserve(newData, m_root, NULL);
+
+}
+
+void BST::insertElemReserve(const int newData, Node *x, Node *y)
+{
+	if(x == NULL)
+	{
+		x = new Node(newData);
+		if(y == NULL)
+			m_root = x;
+		else if(newData < y->data)
+			y->lchild = x;
+		else
+			y->rchild = x;
+		x->p = y;
+	}
+	else if(newData < x->data)
+		insertElemReserve(newData, x->lchild, x);
+	else
+		insertElemReserve(newData, x->rchild, x);
+	m_size++;
 }
 
 void BST::printNode(const Node *node) const
@@ -117,40 +139,24 @@ void BST::midOrderWithNode(const Node *node) const
 	if(node == NULL) return;
 	midOrderWithNode(node->lchild);
 	printNode(node);
-	midOrderWithNode(node->rchild); 
-/*
-	if(node->lchild != NULL)
-	{
-		midOrderWithNode(node->lchild);
-	}
-	printNode(node);
-	if(node->rchild != NULL)
-	{
-		midOrderWithNode(node->rchild);
-	}
-*/
+	midOrderWithNode(node->rchild);
 }
 
 void BST::midOrderPrint() const
 {
-	if(size == 0)
-	{
-		cerr << "ERROR! No element in the BST " << endl;
-		return;
-	}
-	midOrderWithNode(root);
+	midOrderWithNode(m_root);
 }
 
-bool BST::searchWithNode(const Node *node, const int val) const
+Node* BST::searchWithNode(Node *node, const int val) const
 {
 	if(node == NULL)
-	{	
+	{
 		cout << "Can't find Value of " << val << endl;
-		return false;
+		return NULL;
 	}
 	if(node->data == val)
 	{
-		return true;
+		return node;
 	}
 	if(val<node->data)
 		 return searchWithNode(node->lchild, val);
@@ -158,21 +164,87 @@ bool BST::searchWithNode(const Node *node, const int val) const
 		return searchWithNode(node->rchild, val);
 }
 
-bool BST::search(const int val) const
+Node* BST::search(const int val) const
 {
-	return searchWithNode(root, val);
+	return searchWithNode(m_root, val);
 }
 
-/*
+Node* BST::successor(Node *x)
+{
+	if(x->rchild != NULL)
+		return minimum(x->rchild);
+	while(x->p != NULL && x == x->p->rchild)
+		x = x->p;
+	return x->p;
+}
+
+Node* BST::predecessor(Node *x)
+{
+	if(x->lchild != NULL)
+		return maximum(x->lchild);
+	while(x->p != NULL && x == x->p->lchild)
+		x = x->p;
+	return x->p;
+}
+
+//replace Node u by Node v
+void BST::replace(Node *u, Node *v)
+{
+	if(u == m_root)
+		m_root = v;
+	else if(u->p->lchild == u)
+		u->p->lchild = v;
+	else
+		u->p->rchild = v;
+	v->p = u->p;
+}
+
+void BST::deleteNode(Node *x)
+{
+	if(x->lchild == NULL && x->rchild == NULL)
+	{
+		if(x == x->p->lchild) x->p->lchild = NULL;
+		else x->p->rchild = NULL;
+		delete x;
+	}
+	else if(x->lchild == NULL)
+	{
+		replace(x, x->rchild);
+	}
+	else if(x->rchild == NULL)
+	{
+		replace(x, x->lchild);
+	}
+	else
+	{
+		Node *y = successor(x);
+		if(y != x->rchild)
+		{
+			replace(y, y->rchild);
+			Node *r = x->rchild;
+			y->rchild = r;
+			y->rchild->p = y;
+		}
+		replace(x, y);
+		y->lchild = x->lchild;
+		x->lchild->p = y;
+	}
+}
+
 int main()
 {
 	int testArray[10] = {5,4,6,3,7,2,8,1,9,0};
 	BST aBST(testArray, 10);
 	aBST.midOrderPrint();
-	int Val = 10;
-	cout << "Can we find Value of " << Val <<
-		"in the BST  " << aBST.search(Val) << endl;
-	system("PAUSE");
+
+	int Val = 3;
+	Node *pSearched = aBST.search(Val);
+	Node *pSuccessed = aBST.successor(pSearched);
+	Node *pPredecessor = aBST.predecessor(pSearched);
+	aBST.deleteNode(pSearched);
+
+	aBST.midOrderPrint();
+
+	cout << pPredecessor->data << endl;
 	return 0;
 }
-*/
