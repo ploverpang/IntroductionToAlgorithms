@@ -105,7 +105,6 @@ void BST::insertElem(const int newData)
 {
 	// reserve
 	insertElemReserve(newData, m_root, NULL);
-
 }
 
 void BST::insertElemReserve(const int newData, Node *x, Node *y)
@@ -158,7 +157,7 @@ Node* BST::searchWithNode(Node *node, const int val) const
 		return node;
 	}
 	if(val<node->data)
-		 return searchWithNode(node->lchild, val);
+		return searchWithNode(node->lchild, val);
 	else
 		return searchWithNode(node->rchild, val);
 }
